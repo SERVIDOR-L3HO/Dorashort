@@ -34,8 +34,11 @@ export async function getMovieDetail(slug) {
   return await get(`/movie/${slug}`)
 }
 
-export async function getEpisodes(serieId) {
-  return await get(`/episodes/${serieId}`) || []
+export async function getEpisodes(serieId, serieSlug, serieLink) {
+  const q = new URLSearchParams()
+  if (serieSlug) q.set('serieSlug', serieSlug)
+  if (serieLink) q.set('serieLink', serieLink)
+  return await get(`/episodes/${serieId}?${q.toString()}`) || []
 }
 
 export async function getGenres() {

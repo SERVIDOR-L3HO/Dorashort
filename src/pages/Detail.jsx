@@ -26,7 +26,7 @@ export default function Detail({ type = 'serie' }) {
       if (detail) {
         if (!isMovie) {
           setEpLoading(true)
-          const eps = await getEpisodes(detail.id)
+          const eps = await getEpisodes(detail.id, detail.slug, detail.link)
           setEpisodes(eps)
           setEpLoading(false)
         }

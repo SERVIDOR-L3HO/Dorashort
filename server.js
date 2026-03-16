@@ -141,30 +141,107 @@ app.get('/api/movie/:slug', async (req, res) => {
 })
 
 /* ──────────────────────────────────────────
-   EPISODES
+   EPISODES — correct approach via slug pattern
+   Episodes slugs follow: {serieSlug}-s{season}x{episode}
+   We scrape the serie page HTML to find max episode count
+   then batch-fetch via WP REST API using slug filter.
 ────────────────────────────────────────── */
+async function fetchEpisodesBySlugBatch(slugs) {
+  if (!slugs.length) return []
+  const chunkSize = 50
+  const chunks = []
+  for (let i = 0; i < slugs.length; i += chunkSize) {
+    chunks.push(slugs.slice(i, i + chunkSize))
+  }
+  const results = await Promise.all(chunks.map(chunk => {
+    const url = `${BASE}/episodes?slug=${chunk.join(',')}&per_page=100&orderby=date&order=asc&_embed`
+    return proxyFetch(url).catch(() => [])
+  }))
+  return results.flat()
+}
+
+function formatEpisode(ep) {
+  const media = ep._embedded?.['wp:featuredmedia']?.[0]
+  const sizes = media?.media_details?.sizes || {}
+  const thumb = sizes.crvs_thumbnail_episode?.source_url
+    || sizes.thumbnail?.source_url
+    || sizes.medium?.source_url
+    || media?.source_url || ''
+  return {
+    id: ep.id,
+    title: ep.title?.rendered || '',
+    slug: ep.slug,
+    link: ep.link,
+    date: ep.date,
+    thumbnail: thumb,
+    excerpt: ep.excerpt?.rendered?.replace(/<[^>]*>/g, '').trim() || '',
+  }
+}
+
 app.get('/api/episodes/:serieId', async (req, res) => {
   try {
-    const url = `${BASE}/episodes?serie=${req.params.serieId}&per_page=100&orderby=date&order=asc&_embed`
-    const data = await proxyFetch(url)
-    const formatted = data.map(ep => {
-      const media = ep._embedded?.['wp:featuredmedia']?.[0]
-      const sizes = media?.media_details?.sizes || {}
-      const thumb = sizes.crvs_thumbnail_episode?.source_url
-        || sizes.thumbnail?.source_url
-        || media?.source_url || ''
-      return {
-        id: ep.id,
-        title: ep.title?.rendered || '',
-        slug: ep.slug,
-        link: ep.link,
-        date: ep.date,
-        thumbnail: thumb,
-        excerpt: ep.excerpt?.rendered?.replace(/<[^>]*>/g, '').trim() || '',
+    const { serieSlug, serieLink } = req.query
+
+    // If no serieSlug/serieLink, fall back gracefully
+    if (!serieSlug || !serieLink) {
+      return res.json([])
+    }
+
+    // 1. Fetch the serie page HTML to discover episode structure
+    const html = await fetchHtml(serieLink).catch(() => '')
+
+    // 2. Extract all episode <li class="lep"> elements
+    const lepBlocks = html.match(/<li class="lep"[^>]*>[\s\S]*?<\/li>/g) || []
+
+    // Parse each visible episode to find: season number, episode number, slug prefix
+    const seasonMap = {}   // { seasonNum: { base: string, maxEp: number } }
+
+    for (const block of lepBlocks) {
+      const seasonMatch = block.match(/data-season="(\d+)"/)
+      const episodeMatch = block.match(/data-episode="(\d+)"/)
+      const hrefMatch = block.match(/href="https:\/\/tudorama\.com\/ver\/([^\/]+)\/"/)
+      if (!seasonMatch || !episodeMatch || !hrefMatch) continue
+
+      const seasonNum = parseInt(seasonMatch[1])
+      const epNum = parseInt(episodeMatch[1])
+      const epSlug = hrefMatch[1]   // e.g. goblin-el-solitario-ser-inmortal-s1x16
+
+      // Derive the season base slug: everything before "x{epNum}" at the end
+      const base = epSlug.replace(new RegExp(`x${epNum}$`), 'x')
+
+      if (!seasonMap[seasonNum]) {
+        seasonMap[seasonNum] = { base, maxEp: epNum }
+      } else {
+        if (epNum > seasonMap[seasonNum].maxEp) {
+          seasonMap[seasonNum].maxEp = epNum
+        }
       }
-    })
-    res.json(formatted)
+    }
+
+    // 3. If we found season data, build all episode slugs
+    let allEpisodeData = []
+
+    if (Object.keys(seasonMap).length > 0) {
+      const allSlugs = []
+      for (const [, { base, maxEp }] of Object.entries(seasonMap)) {
+        for (let ep = 1; ep <= maxEp; ep++) {
+          allSlugs.push(`${base}${ep}`)
+        }
+      }
+      const rawEps = await fetchEpisodesBySlugBatch(allSlugs)
+      allEpisodeData = rawEps
+        .map(formatEpisode)
+        .sort((a, b) => {
+          // Sort by episode number extracted from slug
+          const numA = parseInt(a.slug.match(/x(\d+)$/)?.[1] || 0)
+          const numB = parseInt(b.slug.match(/x(\d+)$/)?.[1] || 0)
+          return numA - numB
+        })
+    }
+
+    res.json(allEpisodeData)
   } catch (e) {
+    console.error('episodes error:', e.message)
     res.status(500).json({ error: e.message })
   }
 })
