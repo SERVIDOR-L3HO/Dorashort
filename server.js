@@ -438,6 +438,10 @@ app.get('/api/player-proxy', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`API proxy running on port ${PORT}`)
-})
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`API proxy running on port ${PORT}`)
+  })
+}
+
+export default app
