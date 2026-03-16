@@ -1,8 +1,12 @@
 import express from 'express'
 import cors from 'cors'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+import { existsSync } from 'fs'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
 const app = express()
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 
 app.use(cors())
 app.use(express.json())
@@ -392,11 +396,24 @@ app.get('/api/player-proxy', async (req, res) => {
 })
 
 /* ─────────────────────────────────────────────────
+   SERVE FRONTEND (production build)
+───────────────────────────────────────────────── */
+const distPath = join(__dirname, 'dist')
+if (existsSync(distPath)) {
+  app.use(express.static(distPath))
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(join(distPath, 'index.html'))
+    }
+  })
+}
+
+/* ─────────────────────────────────────────────────
    START
 ───────────────────────────────────────────────── */
 if (!process.env.VERCEL) {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`API proxy running on port ${PORT}`)
+    console.log(`Server running on port ${PORT}`)
   })
 }
 
