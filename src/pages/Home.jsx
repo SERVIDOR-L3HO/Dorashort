@@ -1,35 +1,35 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import HeroSection from '../components/HeroSection'
 import VideoRow from '../components/VideoRow'
-import { getFeaturedDramas, getTrendingDramas, getNewDramas, getDramasByCategory, CATEGORIES } from '../api/dailymotion'
-import { Link } from 'react-router-dom'
+import { getEnEmision, getTrending, getRecientes, getDramasByCategory } from '../api/dailymotion'
 
 export default function Home() {
-  const [featured, setFeatured] = useState([])
+  const [enEmision, setEnEmision] = useState([])
   const [trending, setTrending] = useState([])
-  const [newDramas, setNewDramas] = useState([])
-  const [romance, setRomance] = useState([])
-  const [fantasy, setFantasy] = useState([])
-  const [doramas, setDoramas] = useState([])
+  const [recientes, setRecientes] = useState([])
+  const [kdrama, setKdrama] = useState([])
+  const [cdrama, setCdrama] = useState([])
+  const [peliculas, setPeliculas] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       setLoading(true)
-      const [f, t, n, r, fa, d] = await Promise.all([
-        getFeaturedDramas(),
-        getTrendingDramas(),
-        getNewDramas(),
-        getDramasByCategory('romance'),
-        getDramasByCategory('fantasy'),
-        getDramasByCategory('doramas'),
+      const [e, t, r, k, c, p] = await Promise.all([
+        getEnEmision(),
+        getTrending(),
+        getRecientes(),
+        getDramasByCategory('kdrama'),
+        getDramasByCategory('cdrama'),
+        getDramasByCategory('peliculas'),
       ])
-      setFeatured(f)
+      setEnEmision(e)
       setTrending(t)
-      setNewDramas(n)
-      setRomance(r)
-      setFantasy(fa)
-      setDoramas(d)
+      setRecientes(r)
+      setKdrama(k)
+      setCdrama(c)
+      setPeliculas(p)
       setLoading(false)
     }
     load()
@@ -37,77 +37,51 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      {/* Hero */}
-      <HeroSection videos={featured} />
+      <HeroSection videos={enEmision} />
 
-      {/* Categories Quick Access */}
-      <div className="py-8 px-4 sm:px-6 max-w-7xl mx-auto">
-        <h2 className="text-lg font-bold text-white mb-4">Explorar por categoría</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-          {CATEGORIES.map(cat => (
+      {/* Genre quick links */}
+      <div className="px-4 sm:px-6 py-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+          {[
+            { to: '/browse?cat=kdrama', label: 'K-Dramas', emoji: '🇰🇷' },
+            { to: '/browse?cat=cdrama', label: 'C-Dramas', emoji: '🇨🇳' },
+            { to: '/browse?cat=jdrama', label: 'J-Dramas', emoji: '🇯🇵' },
+            { to: '/browse?cat=latino', label: 'Latino', emoji: '🎙️' },
+            { to: '/browse?cat=subtitulado', label: 'Subtitulado', emoji: '💬' },
+            { to: '/browse?cat=peliculas', label: 'Películas', emoji: '🎬' },
+            { to: '/browse?cat=reality', label: 'Reality', emoji: '📺' },
+          ].map(item => (
             <Link
-              key={cat.id}
-              to={`/browse?cat=${cat.id}`}
-              className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-dark-700 hover:bg-dark-600 border border-white/5 hover:border-brand-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-900/20"
+              key={item.to}
+              to={item.to}
+              className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl bg-dark-700 hover:bg-dark-600 border border-white/5 hover:border-white/15 transition-all group"
             >
-              <span className="text-3xl transform group-hover:scale-110 transition-transform">{cat.emoji}</span>
-              <span className="text-sm font-medium text-white/80 group-hover:text-white">{cat.label}</span>
+              <span className="text-2xl group-hover:scale-110 transition-transform">{item.emoji}</span>
+              <span className="text-xs font-medium text-white/70 group-hover:text-white text-center">{item.label}</span>
             </Link>
           ))}
         </div>
       </div>
 
-      {/* Video Rows */}
+      {/* Content rows */}
       <div className="pb-16">
-        <VideoRow
-          title="Doramas Coreanos"
-          emoji="🌸"
-          videos={doramas}
-          loading={loading}
-          viewAllLink="/browse?cat=doramas"
-        />
-        <VideoRow
-          title="Tendencias"
-          emoji="🔥"
-          videos={trending}
-          loading={loading}
-          viewAllLink="/browse"
-        />
-        <VideoRow
-          title="Nuevos Episodios"
-          emoji="✨"
-          videos={newDramas}
-          loading={loading}
-          viewAllLink="/browse"
-        />
-        <VideoRow
-          title="Romance"
-          emoji="💕"
-          videos={romance}
-          loading={loading}
-          viewAllLink="/browse?cat=romance"
-        />
-        <VideoRow
-          title="Fantasía & Sobrenatural"
-          emoji="🌙"
-          videos={fantasy}
-          loading={loading}
-          viewAllLink="/browse?cat=fantasy"
-        />
+        <VideoRow title="Populares" emoji="🔥" videos={trending} loading={loading} viewAllLink="/browse" badge="Hot" />
+        <VideoRow title="Recién Agregados" emoji="✨" videos={recientes} loading={loading} viewAllLink="/browse" />
+        <VideoRow title="K-Dramas" emoji="🇰🇷" videos={kdrama} loading={loading} viewAllLink="/browse?cat=kdrama" />
+        <VideoRow title="C-Dramas" emoji="🇨🇳" videos={cdrama} loading={loading} viewAllLink="/browse?cat=cdrama" />
+        <VideoRow title="Películas Asiáticas" emoji="🎬" videos={peliculas} loading={loading} viewAllLink="/browse?cat=peliculas" />
       </div>
 
-      {/* CTA Banner */}
-      <div className="mx-4 sm:mx-6 mb-16 rounded-3xl overflow-hidden relative">
-        <div className="absolute inset-0 bg-brand-gradient opacity-20" />
-        <div className="relative p-8 sm:p-12 text-center">
-          <h2 className="text-2xl sm:text-3xl font-display font-bold text-white mb-3">
-            Miles de episodios te esperan
-          </h2>
-          <p className="text-white/70 mb-6 max-w-md mx-auto">
-            Descubre los mejores short dramas de romance, suspenso, fantasía y más. ¡Totalmente gratis!
+      {/* Footer CTA */}
+      <div className="mx-4 sm:mx-6 mb-16 rounded-2xl overflow-hidden relative bg-dark-700 border border-white/8">
+        <div className="absolute inset-0 bg-brand-gradient opacity-10" />
+        <div className="relative px-8 py-10 text-center">
+          <h2 className="text-2xl font-bold text-white mb-2">Todos tus doramas favoritos</h2>
+          <p className="text-white/50 text-sm mb-5 max-w-md mx-auto">
+            K-Dramas, C-Dramas, J-Dramas y más. Subtitulados y doblados en Español Latino. Totalmente gratis.
           </p>
-          <Link to="/browse" className="btn-primary inline-block">
-            Explorar Todo
+          <Link to="/browse" className="inline-flex items-center gap-2 bg-white text-dark-900 font-bold px-6 py-2.5 rounded-xl hover:bg-white/90 transition-all text-sm">
+            Explorar todo →
           </Link>
         </div>
       </div>

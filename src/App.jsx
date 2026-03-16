@@ -6,20 +6,20 @@ import Player from './pages/Player'
 
 function Footer() {
   return (
-    <footer className="bg-dark-800 border-t border-white/5 py-12 px-6">
+    <footer className="bg-dark-800 border-t border-white/5 py-10 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-brand-gradient flex items-center justify-center text-white font-bold text-xs">D</div>
-              <span className="text-lg font-display font-bold bg-clip-text text-transparent bg-brand-gradient">DramaStream</span>
+              <span className="text-xl">🌸</span>
+              <span className="text-lg font-bold text-white">Tu<span className="text-gradient">Dorama</span></span>
             </div>
-            <p className="text-white/40 text-xs">Los mejores short dramas, gratis y en un solo lugar.</p>
+            <p className="text-white/35 text-xs">Doramas online gratis — K-Dramas, C-Dramas, J-Dramas en Español.</p>
           </div>
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-white/40">
-            <span>Contenido provisto por Dailymotion</span>
+          <div className="flex flex-wrap justify-center gap-4 text-xs text-white/30">
+            <span>Contenido vía Dailymotion</span>
             <span>•</span>
-            <span>© 2026 DramaStream</span>
+            <span>© 2026 TuDorama</span>
           </div>
         </div>
       </div>

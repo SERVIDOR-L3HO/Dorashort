@@ -1,23 +1,15 @@
 const BASE_URL = 'https://api.dailymotion.com'
 
-const FIELDS = 'id,title,thumbnail_url,thumbnail_480_url,thumbnail_360_url,duration,views_total,created_time,description,owner.screenname,channel.name'
-
-const DRAMA_SEARCHES = [
-  'short drama romance',
-  'short drama reelshort',
-  'shortdrama episode',
-  'korean drama short',
-  'mini drama series',
-]
+const FIELDS = 'id,title,thumbnail_url,thumbnail_480_url,thumbnail_360_url,duration,views_total,created_time,description,owner.screenname'
 
 const CATEGORIES = [
-  { id: 'doramas', label: 'Doramas', emoji: '🌸', search: 'dorama coreano kdrama korean drama series' },
-  { id: 'romance', label: 'Romance', emoji: '💕', search: 'short drama romance love story' },
-  { id: 'suspense', label: 'Suspenso', emoji: '🔥', search: 'short drama suspense thriller mystery' },
-  { id: 'comedy', label: 'Comedia', emoji: '😂', search: 'short drama comedy funny' },
-  { id: 'action', label: 'Acción', emoji: '⚡', search: 'short drama action fight' },
-  { id: 'fantasy', label: 'Fantasía', emoji: '✨', search: 'short drama fantasy magic supernatural' },
-  { id: 'billionaire', label: 'Millonarios', emoji: '💎', search: 'short drama billionaire rich CEO romance' },
+  { id: 'kdrama', label: 'K-Dramas', emoji: '🇰🇷', search: 'kdrama korean drama español latino subtitulado completo' },
+  { id: 'cdrama', label: 'C-Dramas', emoji: '🇨🇳', search: 'cdrama chinese drama chino español completo subtitulado' },
+  { id: 'jdrama', label: 'J-Dramas', emoji: '🇯🇵', search: 'jdrama japones drama español completo subtitulado' },
+  { id: 'latino', label: 'Español Latino', emoji: '🎙️', search: 'dorama doblado español latino completo kdrama' },
+  { id: 'subtitulado', label: 'Subtitulado', emoji: '💬', search: 'dorama subtitulado español completo episodio kdrama' },
+  { id: 'peliculas', label: 'Películas', emoji: '🎬', search: 'pelicula coreana película china asiática español completo' },
+  { id: 'reality', label: 'Reality Shows', emoji: '📺', search: 'reality show coreano kpop español subtitulado' },
 ]
 
 async function fetchVideos(params = {}) {
@@ -25,11 +17,10 @@ async function fetchVideos(params = {}) {
   const defaults = {
     fields: FIELDS,
     limit: 20,
-    sort: 'visited',
-    'longer_than': 1,
+    'longer_than': 5,
   }
   Object.entries({ ...defaults, ...params }).forEach(([k, v]) => url.searchParams.set(k, v))
-  
+
   try {
     const res = await fetch(url.toString())
     if (!res.ok) throw new Error('API error')
@@ -40,46 +31,26 @@ async function fetchVideos(params = {}) {
   }
 }
 
-export async function getFeaturedDramas() {
-  return fetchVideos({
-    search: DRAMA_SEARCHES[Math.floor(Math.random() * DRAMA_SEARCHES.length)],
-    limit: 10,
-    sort: 'visited',
-  })
+export async function getEnEmision() {
+  return fetchVideos({ search: 'kdrama 2025 2026 episodio español completo', limit: 10, sort: 'recent' })
 }
 
-export async function getTrendingDramas() {
-  return fetchVideos({
-    search: 'short drama reelshort episode',
-    limit: 20,
-    sort: 'trending',
-  })
+export async function getTrending() {
+  return fetchVideos({ search: 'dorama coreano español completo', limit: 20, sort: 'trending' })
 }
 
-export async function getNewDramas() {
-  return fetchVideos({
-    search: 'short drama mini series new',
-    limit: 20,
-    sort: 'recent',
-  })
+export async function getRecientes() {
+  return fetchVideos({ search: 'dorama coreano episodio nuevo 2025', limit: 20, sort: 'recent' })
 }
 
 export async function getDramasByCategory(categoryId) {
   const category = CATEGORIES.find(c => c.id === categoryId)
   if (!category) return []
-  return fetchVideos({
-    search: category.search,
-    limit: 24,
-    sort: 'visited',
-  })
+  return fetchVideos({ search: category.search, limit: 24, sort: 'visited' })
 }
 
 export async function searchDramas(query) {
-  return fetchVideos({
-    search: `short drama ${query}`,
-    limit: 24,
-    sort: 'relevance',
-  })
+  return fetchVideos({ search: `dorama ${query} español completo`, limit: 24, sort: 'relevance' })
 }
 
 export async function getVideoById(id) {
@@ -106,12 +77,13 @@ export async function getRelatedVideos(id) {
 }
 
 export { CATEGORIES }
+
 export function formatDuration(seconds) {
-  if (!seconds) return '0:00'
+  if (!seconds) return ''
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
   const s = seconds % 60
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
