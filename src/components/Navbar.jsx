@@ -32,6 +32,7 @@ export default function Navbar() {
   const navLinks = [
     { to: '/', label: 'Inicio' },
     { to: '/browse', label: 'Explorar' },
+    { to: '/browse?cat=doramas', label: 'Doramas 🌸' },
     { to: '/browse?cat=romance', label: 'Romance' },
     { to: '/browse?cat=fantasy', label: 'Fantasía' },
     { to: '/browse?cat=suspense', label: 'Suspenso' },

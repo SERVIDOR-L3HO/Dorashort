@@ -10,23 +10,26 @@ export default function Home() {
   const [newDramas, setNewDramas] = useState([])
   const [romance, setRomance] = useState([])
   const [fantasy, setFantasy] = useState([])
+  const [doramas, setDoramas] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       setLoading(true)
-      const [f, t, n, r, fa] = await Promise.all([
+      const [f, t, n, r, fa, d] = await Promise.all([
         getFeaturedDramas(),
         getTrendingDramas(),
         getNewDramas(),
         getDramasByCategory('romance'),
         getDramasByCategory('fantasy'),
+        getDramasByCategory('doramas'),
       ])
       setFeatured(f)
       setTrending(t)
       setNewDramas(n)
       setRomance(r)
       setFantasy(fa)
+      setDoramas(d)
       setLoading(false)
     }
     load()
@@ -56,6 +59,13 @@ export default function Home() {
 
       {/* Video Rows */}
       <div className="pb-16">
+        <VideoRow
+          title="Doramas Coreanos"
+          emoji="🌸"
+          videos={doramas}
+          loading={loading}
+          viewAllLink="/browse?cat=doramas"
+        />
         <VideoRow
           title="Tendencias"
           emoji="🔥"

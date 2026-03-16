@@ -11,6 +11,7 @@ const DRAMA_SEARCHES = [
 ]
 
 const CATEGORIES = [
+  { id: 'doramas', label: 'Doramas', emoji: '🌸', search: 'dorama coreano kdrama korean drama series' },
   { id: 'romance', label: 'Romance', emoji: '💕', search: 'short drama romance love story' },
   { id: 'suspense', label: 'Suspenso', emoji: '🔥', search: 'short drama suspense thriller mystery' },
   { id: 'comedy', label: 'Comedia', emoji: '😂', search: 'short drama comedy funny' },
