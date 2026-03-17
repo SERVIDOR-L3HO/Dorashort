@@ -4,16 +4,6 @@ import HeroSection from '../components/HeroSection'
 import ContentRow from '../components/ContentRow'
 import { getHome } from '../api/tudorama'
 
-const GENRE_LINKS = [
-  { to: '/browse?type=series', label: 'K-Dramas', emoji: '🇰🇷' },
-  { to: '/browse?type=series&genre=cdrama', label: 'C-Dramas', emoji: '🇨🇳' },
-  { to: '/browse?type=series&genre=jdrama', label: 'J-Dramas', emoji: '🇯🇵' },
-  { to: '/browse?type=movies', label: 'Películas', emoji: '🎬' },
-  { to: '/browse?type=series&genre=comedia', label: 'Comedia', emoji: '😄' },
-  { to: '/browse?type=series&genre=romance', label: 'Romance', emoji: '💕' },
-  { to: '/browse?type=series&genre=drama', label: 'Drama', emoji: '🎭' },
-]
-
 export default function Home() {
   const [data, setData] = useState({ recientes: [], populares: [], movies: [] })
   const [loading, setLoading] = useState(true)
@@ -28,22 +18,6 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <HeroSection items={data.recientes} />
-
-      {/* Genre quick links */}
-      <div className="px-4 sm:px-6 py-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-          {GENRE_LINKS.map(item => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl bg-dark-700 hover:bg-dark-600 border border-white/5 hover:border-white/12 transition-all group"
-            >
-              <span className="text-2xl group-hover:scale-110 transition-transform">{item.emoji}</span>
-              <span className="text-xs font-medium text-white/60 group-hover:text-white text-center leading-tight">{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
 
       {/* Rows */}
       <div className="pb-16">
