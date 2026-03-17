@@ -55,6 +55,7 @@ const Q_LIST = `
         first_air_date vote_average overview isTVShow
         genres { name slug }
       }
+      pageInfo { hasNextPage }
     }
   }
 `
@@ -185,6 +186,41 @@ export default async function handler(req) {
     if (path === '/api/series') {
       const page = parseInt(params.get('page') || '1')
       const perPage = parseInt(params.get('per_page') || '24')
+      const genre = params.get('genre')
+
+      if (genre) {
+        const GENRE_ALIASES = {
+          comedia: ['comedia', 'comedy'],
+          romance: ['romance'],
+          drama: ['drama'],
+          accion: ['acción', 'accion', 'action'],
+          thriller: ['thriller'],
+          'ciencia-ficcion': ['ciencia ficción', 'ciencia ficcion', 'sci-fi', 'science fiction'],
+          fantasia: ['fantasía', 'fantasia', 'fantasy'],
+          historico: ['histórico', 'historico', 'historical'],
+          misterio: ['misterio', 'mystery'],
+          aventura: ['aventura', 'adventure'],
+          melodrama: ['melodrama'],
+          suspenso: ['suspenso', 'suspense'],
+        }
+        const aliases = GENRE_ALIASES[genre] || [genre.toLowerCase().replace(/-/g, ' ')]
+
+        let collected = []
+        let p = 1
+        while (collected.length < perPage && p <= 4) {
+          const data = await gql(Q_LIST, { page: p, perPage: 100, sort: 'POPULARITY_DESC' })
+          const items = data.paginationDorama.items
+          if (!items || items.length === 0) break
+          const filtered = items.filter(d => {
+            const itemGenres = (d.genres || []).map(g => (g.name || '').toLowerCase())
+            return aliases.some(alias => itemGenres.some(ig => ig.includes(alias)))
+          })
+          collected = collected.concat(filtered)
+          p++
+        }
+        return json(collected.slice(0, perPage).map(formatDorama))
+      }
+
       const data = await gql(Q_LIST, { page, perPage, sort: 'POPULARITY_DESC' })
       return json(data.paginationDorama.items.map(formatDorama))
     }
