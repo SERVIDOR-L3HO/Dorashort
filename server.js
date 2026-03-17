@@ -181,14 +181,55 @@ app.get('/api/img', async (req, res) => {
 })
 
 /* ─────────────────────────────────────────────────
-   SERIES  (doramas — popular listing)
+   SERIES  (doramas — popular listing, with genre filter)
 ───────────────────────────────────────────────── */
 app.get('/api/series', async (req, res) => {
   try {
-    const { page = 1, per_page = 24 } = req.query
+    const { page = 1, per_page = 24, genre } = req.query
+    const perPage = parseInt(per_page)
+
+    if (genre) {
+      const genreNorm = genre.toLowerCase().replace(/-/g, ' ')
+      const GENRE_ALIASES = {
+        comedia: ['comedia', 'comedy'],
+        romance: ['romance'],
+        drama: ['drama'],
+        accion: ['acción', 'accion', 'action'],
+        thriller: ['thriller'],
+        'ciencia-ficcion': ['ciencia ficción', 'ciencia ficcion', 'sci-fi', 'science fiction'],
+        fantasia: ['fantasía', 'fantasia', 'fantasy'],
+        historico: ['histórico', 'historico', 'historical'],
+        misterio: ['misterio', 'mystery'],
+        aventura: ['aventura', 'adventure'],
+        melodrama: ['melodrama'],
+        suspenso: ['suspenso', 'suspense'],
+      }
+      const aliases = GENRE_ALIASES[genre] || [genreNorm]
+
+      let collected = []
+      let p = 1
+      const fetchPerPage = 100
+
+      while (collected.length < perPage && p <= 5) {
+        const data = await gql(Q_LIST, { page: p, perPage: fetchPerPage, sort: 'POPULARITY_DESC' })
+        const items = data.paginationDorama.items
+        if (!items || items.length === 0) break
+
+        const filtered = items.filter(d => {
+          const itemGenres = (d.genres || []).map(g => (g.name || '').toLowerCase())
+          return aliases.some(alias => itemGenres.some(ig => ig.includes(alias)))
+        })
+        collected = collected.concat(filtered)
+        if (!data.paginationDorama.pageInfo?.hasNextPage) break
+        p++
+      }
+
+      return res.json(collected.slice(0, perPage).map(formatDorama))
+    }
+
     const data = await gql(Q_LIST, {
       page: parseInt(page),
-      perPage: parseInt(per_page),
+      perPage: perPage,
       sort: 'POPULARITY_DESC',
     })
     res.json(data.paginationDorama.items.map(formatDorama))
